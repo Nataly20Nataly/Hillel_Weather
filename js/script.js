@@ -1,6 +1,9 @@
 let objSel = document.querySelector(`.form-select`)
-
+const key = `b77c7564954ed5ea00c7ec440098cd00`
+const url = `http://api.weatherstack.com/current`
 let createdCity = [`Kiev`, "Moscow", "London", "Tokyo", "Madrid"]
+let card = document.querySelector(`.card`)
+card.hidden = true
 
 function selectedCity() {
   createdCity.forEach((item) => {
@@ -10,45 +13,39 @@ function selectedCity() {
     el.value = item
   })
 }
-selectedCity(createdCity)
+selectedCity()
 
 async function getWeather() {
-  let response = await fetch(
-    `http://api.weatherstack.com/current?access_key=b77c7564954ed5ea00c7ec440098cd00&query=${objSel.value}`
-  )
+  let response = await fetch(`${url}?access_key=${key}&query=${objSel.value}`)
   return response.json()
 }
 
+function infoCityWeather({
+  current: {
+    observation_time: timeCity,
+    weather_descriptions: condition,
+    weather_icons: [img],
+    temperature: degrees,
+  },
 
-function infoCityWeather(
-  {
-    request: {
- current: {
-      observation_time: timeCity,
-      weather_descriptions: condition,
-      weather_icons: img,
-      temperature: degrees,
-    },
- location: { 
-      name: city, 
-      country: country }
-    },
-}
-) {
+  location: { name: city, country: country },
+}) {
   let cardTime = document.querySelector(`.card-title:first-child`)
   cardTime.textContent = `Time - ${timeCity} - ${condition}`
-  let cardTextTemp = document.querySelector(`.card-text:nth-child(2)`)
+  let [cardTextTemp, cardTextLoc] = document.querySelectorAll(`.card-text`)
   cardTextTemp.textContent = `Temperature: ${degrees}`
-  let cardTextLoc = document.querySelector(`.card-title:last-child`)
-  cardTextLoc.textContent = city + `, ` + country
+  cardTextLoc.innerText = city + `, ` + country
   let image = document.querySelector(`.card-img-top`)
-  image.scr = img
+  image.src = img
+  card.hidden = false
 }
 
-
-async function InfoWeatherInCard(){
-    let data = await getWeather()
-}
-
-
-
+objSel.addEventListener(`change`, async (event) => {
+  if (isNaN(event.target.value)) {
+    let getInfo = await getWeather(event.target.value)
+    console.log(getInfo)
+    infoCityWeather(getInfo)
+  } else {
+    card.hidden = true
+  }
+})
